@@ -3,6 +3,7 @@
 # !@Time    : 2021/5/26 上午10:51
 # !@Author  : miracleyin @email: miracleyin@live.com
 # !@File    : vis.py
+import numpy as np
 import torch
 import math
 import torch
@@ -234,9 +235,12 @@ def evaluate(eval_model, data_source):
             output_flat = output.view(-1, ntoken)
             total_loss += len(data) * criterion(output_flat, targets).item()
     attn_weight = torch.cat(attn_weight, 0)
-    attn_weight = torch.squeeze(attn_weight, dim=1)
+    # attn_weight = torch.squeeze(attn_weight, dim=1)
+    attn_mat = torch.zeros([attn_weight.shape[0], attn_weight.shape[0]])
+    for i in range(attn_weight.shape[0]):
+        for j in range(attn_weight.shape[0]):
+            attn_mat[i, j] = torch.cosine_similarity(attn_weight[i], attn_weight[j])
 
-    attn_mat = torch.dist(attn_weight, attn_weight)
 
     return total_loss / (len(data_source) - 1), attn_weight, attn_mat
 
@@ -312,6 +316,6 @@ if __name__ == '__main__':
         import time
         text = data_loader.text
 
-        _, attn_weight, attn_mat = evaluate(model, data_loader.pred_data)
+        _, attn_weight, attn_mat = evaluate(model, data_loader.pred_data[:3500])
 
         print(attn_weight)
